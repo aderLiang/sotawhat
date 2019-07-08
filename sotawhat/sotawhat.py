@@ -4,10 +4,10 @@ import sys
 import urllib.error
 import urllib.request
 import warnings
+import html
 
 import nltk
 from nltk.tokenize import word_tokenize
-from six.moves.html_parser import HTMLParser
 from spellchecker import SpellChecker
 
 try:
@@ -15,7 +15,7 @@ try:
 except LookupError:
     nltk.download('punkt')
 
-h = HTMLParser()
+# h = HTMLParser()
 
 AUTHOR_TAG = '<a href="/search/?searchtype=author'
 TITLE_TAG = '<p class="title is-5 mathjax">'
@@ -50,8 +50,8 @@ def get_next_result(lines, start):
     """
 
     result = {}
-    idx = lines[start + 3][10:].find('"')
-    result['main_page'] = lines[start + 3][9:10 + idx]
+    idx = lines[start + 2][48:].find('"')
+    result['main_page'] = lines[start + 2][47:48 + idx]
     idx = lines[start + 4][23:].find('"')
     result['pdf'] = lines[start + 4][22: 23 + idx] + '.pdf'
 
@@ -183,9 +183,9 @@ def extract_line(abstract, keyword, limit):
 
 def get_report(paper, keyword):
     if keyword in paper['abstract'].lower():
-        title = h.unescape(paper['title'])
+        title = html.unescape(paper['title'])
         headline = '{} ({} - {})\n'.format(title, paper['authors'][0], paper['date'])
-        abstract = h.unescape(paper['abstract'])
+        abstract = html.unescape(paper['abstract'])
         extract, has_number = extract_line(abstract, keyword, 280 - len(headline))
         if extract:
             report = headline + extract + '\nLink: {}'.format(paper['main_page'])
@@ -249,6 +249,7 @@ def get_papers(keyword, num_results=5):
         query = query_temp.format(keyword_q, str(per_page), str(per_page * page))
 
         req = urllib.request.Request(query)
+        # gcontext = ssl.SSLContext()
         try:
             response = urllib.request.urlopen(req)
         except urllib.error.HTTPError as e:
